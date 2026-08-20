@@ -1,0 +1,17 @@
+{
+  "protocol_version": 1,
+  "request_id": "fixture-batch",
+  "status": "completed",
+  "results": [
+    {
+      "command": "player.additem 0000000F 100",
+      "status": "executed",
+      "console_output": ""
+    },
+    {
+      "command": "player.getav health",
+      "status": "executed",
+      "console_output": "GetActorValue: Health >> 222.00"
+    }
+  ]
+}

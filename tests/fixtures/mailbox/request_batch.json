@@ -1,0 +1,8 @@
+{
+  "protocol_version": 1,
+  "request_id": "fixture-batch",
+  "commands": [
+    "player.additem 0000000F 100",
+    "player.getav health"
+  ]
+}

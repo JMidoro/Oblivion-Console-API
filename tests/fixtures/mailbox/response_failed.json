@@ -1,0 +1,22 @@
+{
+  "protocol_version": 1,
+  "request_id": "fixture-failure",
+  "status": "failed",
+  "results": [
+    {
+      "command": "player.getav health",
+      "status": "executed",
+      "console_output": "GetActorValue: Health >> 222.00"
+    },
+    {
+      "command": "definitely_not_a_real_command",
+      "status": "console_error",
+      "console_output": "Script 'SysWindowCompileAndRun', line 1:\nScript command \"definitely_not_a_real_command\" not found."
+    },
+    {
+      "command": "player.additem 0000000F 100",
+      "status": "unattempted",
+      "console_output": ""
+    }
+  ]
+}

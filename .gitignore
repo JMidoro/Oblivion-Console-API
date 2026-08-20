@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Runtime mailbox artifacts
+request.json
+request.json.tmp
+response.json
+response.json.tmp
+
+# Local smoke-test process logs
+artifacts/service-*.log

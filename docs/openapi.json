@@ -1,0 +1,275 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Oblivion Remastered Companion Bridge",
+    "description": "Execute ordered batches of raw Oblivion console commands through a local UE4SS mailbox.",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8765"
+    }
+  ],
+  "paths": {
+    "/v1/commands": {
+      "post": {
+        "summary": "Execute Oblivion console commands",
+        "description": "Execute one or more raw Oblivion console commands in order. The HTTP request remains open until the complete batch result is available or the service times out. Commands stop after the first detected failure. Console output may be empty. Executed means dispatch completed; it does not verify the gameplay effect. A timeout does not distinguish loading, a closed game, or an unavailable game-side mod.",
+        "operationId": "oblivion_console",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommandsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandsResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The mailbox returned an invalid response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "The complete game-side response did not arrive before the configured deadline. No unavailable-game subtype is reported.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeoutResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CommandResult": {
+        "properties": {
+          "command": {
+            "type": "string",
+            "title": "Command",
+            "description": "The submitted command."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "executed",
+              "console_error",
+              "bridge_error",
+              "unattempted"
+            ],
+            "title": "Status",
+            "description": "What the bridge established about this command. Executed means dispatch completed; it does not verify the gameplay effect."
+          },
+          "console_output": {
+            "type": "string",
+            "title": "Console Output",
+            "description": "Text captured from the Oblivion console. An empty string is valid."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "command",
+          "status",
+          "console_output"
+        ],
+        "title": "CommandResult"
+      },
+      "CommandsRequest": {
+        "properties": {
+          "commands": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Commands",
+            "description": "Raw Oblivion console commands in execution order."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "commands"
+        ],
+        "title": "CommandsRequest",
+        "examples": [
+          {
+            "commands": [
+              "player.additem 0000000F 100",
+              "tgm"
+            ]
+          }
+        ]
+      },
+      "CommandsResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/CommandResult"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "results"
+        ],
+        "title": "CommandsResponse",
+        "examples": [
+          {
+            "results": [
+              {
+                "command": "player.additem 0000000F 100",
+                "console_output": "",
+                "status": "executed"
+              }
+            ],
+            "status": "completed"
+          }
+        ]
+      },
+      "ErrorResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "bridge_error",
+            "title": "Status",
+            "default": "bridge_error"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "ErrorResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "TimeoutResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "timed_out",
+            "title": "Status",
+            "default": "timed_out"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/CommandResult"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "TimeoutResponse",
+        "examples": [
+          {
+            "results": [],
+            "status": "timed_out"
+          }
+        ]
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
